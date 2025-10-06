@@ -9,13 +9,14 @@ import java.io.InputStream;
  */
 record ClassHeader(int accessFlags, String superInternalName) {
     private static final int ACC_INTERFACE = 0x0200;
-    private static final int ACC_ABSTRACT  = 0x0400;
+    private static final int ACC_ABSTRACT = 0x0400;
 
     boolean isInterface() {
         return (accessFlags & ACC_INTERFACE) != 0;
     }
-    boolean isAbstract()  {
-        return (accessFlags & ACC_ABSTRACT)  != 0;
+
+    boolean isAbstract() {
+        return (accessFlags & ACC_ABSTRACT) != 0;
     }
 
     static ClassHeader read(InputStream raw) throws IOException {
@@ -35,13 +36,22 @@ record ClassHeader(int accessFlags, String superInternalName) {
         for (int i = 1; i < cpCount; i++) {
             final int tag = in.readUnsignedByte();
             switch (tag) {
-                case 1 -> utf8[i] = in.readUTF();                                 // Utf8
+                case 1 -> utf8[i] = in.readUTF();                                // Utf8
                 case 3, 4 -> in.skipNBytes(4);                                // int/float
-                case 5, 6 -> { in.skipNBytes(8); i++; }                       // long/double (2 slots)
+                case 5, 6 -> {                                                   // long/double (2 slots)
+                    in.skipNBytes(8);
+                    i++;
+                }
                 case 7 -> classNameIndex[i] = in.readUnsignedShort();         // Class -> name_index (u2)
                 case 8 -> in.readUnsignedShort();                             // String -> string_index
-                case 9, 10, 11, 12, 18 -> { in.readUnsignedShort(); in.readUnsignedShort(); } // refs / name&type / indy
-                case 15 -> { in.readUnsignedByte(); in.readUnsignedShort(); } // MethodHandle
+                case 9, 10, 11, 12, 18 -> {
+                    in.readUnsignedShort();
+                    in.readUnsignedShort();
+                } // refs / name&type / indy
+                case 15 -> {
+                    in.readUnsignedByte();
+                    in.readUnsignedShort();
+                } // MethodHandle
                 case 16, 19, 20 -> in.readUnsignedShort();                    // MethodType / Module / Package
                 default -> throw new IOException("Unknown cp tag: " + tag);
             }

@@ -48,6 +48,7 @@ public final class CodegenNanoSvcList extends AbstractMojo {
         final Map<String, Boolean> cache = new HashMap<>();       // Cache already iterated paths
         final Set<String> services = new HashSet<>();             // services matched
         final Map<String, ClassHeader> headers = new HashMap<>(); // Headers for each class
+
         try {
             final Path classesDir = Path.of(project.getBuild().getOutputDirectory());
             if (!Files.isDirectory(classesDir)) {
@@ -62,7 +63,6 @@ public final class CodegenNanoSvcList extends AbstractMojo {
                     scanJar(jar, headers);
                 }
             }
-
 
             log("[codegen-svc-list] headers size = " + headers.size(), 'I');
             log("[codegen-svc-list] headers = " + headers, 'I');
@@ -121,11 +121,6 @@ public final class CodegenNanoSvcList extends AbstractMojo {
                 }
             }
         }
-    }
-
-    // remove .class from key names in header
-    private String formatKey(String className) {
-        return className.substring(0, className.length() - 6);
     }
 
     private boolean isSubclassOfBase(String internal, final Map<String, ClassHeader> headers,
@@ -216,5 +211,10 @@ public final class CodegenNanoSvcList extends AbstractMojo {
                 case 'D' -> getLog().debug(msg);
             }
         }
+    }
+
+    // remove .class from key names in header
+    private String formatKey(String className) {
+        return className.substring(0, className.length() - 6);
     }
 }

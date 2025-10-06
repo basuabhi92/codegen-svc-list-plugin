@@ -1,11 +1,14 @@
 # Maven plugin for generating available Nano services in consumer projects
 
-Generates a compile-time index of all **concrete subclasses** of your Nano `Service` — from **the current module and its dependencies** — and package it into your JAR at:
+Generates a compile-time index of all **concrete subclasses** of your Nano `Service` — from **the current module and its
+dependencies** — and package it into your JAR at:
+
 ```
 META-INF/plugin/nano/services.index
 ```
 
-Each line in the file is a fully-qualified class name. No reflection, no runtime scanning — just a fast header scan at build time.
+Each line in the file is a fully-qualified class name. No reflection, no runtime scanning — just a fast header scan at
+build time.
 
 ---
 
@@ -13,7 +16,7 @@ Each line in the file is a fully-qualified class name. No reflection, no runtime
 
 - ⚡  **Fast**: parses only .class headers (no ASM, no classloading).
 - 📦 **Works across dependencies**: current module + resolved JARs.
-- 🧹 **Deterministic**: runs at `process-classes`, writes only if content changed.
+- 🧹 **Memoization**: stores traversed superclass paths in memory to avoid rework.
 - 🔒 **Zero intrusion**: developers don’t add annotations or code.
 
 ---
@@ -30,27 +33,28 @@ Each line in the file is a fully-qualified class name. No reflection, no runtime
 Add the plugin to any module that produces a JAR:
 
 ```xml
+
 <build>
-  <plugins>
-    <plugin>
-      <groupId>org.nanonative</groupId>
-      <artifactId>codegen-svc-list-maven-plugin</artifactId>
-      <version>1.0.0</version>
-      <executions>
-        <execution>
-          <id>nano-service-index</id>
-          <phase>process-classes</phase>
-          <goals>
-            <goal>generate</goal>
-          </goals>
-          <!-- Optional: If Nano's service class moves from the default add the below config to point to the new location -->
-          <configuration>
-            <baseService>org/nanonative/nano/core/model/Service</baseService>
-          </configuration>
-        </execution>
-      </executions>
-    </plugin>
-  </plugins>
+    <plugins>
+        <plugin>
+            <groupId>org.nanonative</groupId>
+            <artifactId>codegen-svc-list-maven-plugin</artifactId>
+            <version>1.0.0</version>
+            <executions>
+                <execution>
+                    <id>nano-service-index</id>
+                    <phase>process-classes</phase>
+                    <goals>
+                        <goal>generate</goal>
+                    </goals>
+                    <!-- Optional: If Nano's service class moves from the default add the below config to point to the new location -->
+                    <configuration>
+                        <baseService>org/nanonative/nano/core/model/Service</baseService>
+                    </configuration>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
 </build>
 ```
 
@@ -64,11 +68,10 @@ mvn clean package -DcodegenSvcList.verbose=true
 
 ## Configuration
 
-| Parameter       | Type    | Default                                    | How to set                                   |
-|-----------------|---------|--------------------------------------------|-----------------------------------------------|
-| `baseService`   | String  | `org.nanonative.nano.core.model.Service`   | `<configuration>` or `-DcodegenSvcList.baseService=...` |
-| `verbose`       | boolean | `false`                                    | `-DcodegenSvcList.verbose=true`               |
-
+| Parameter     | Type    | Default                                  | How to set                                              |
+|---------------|---------|------------------------------------------|---------------------------------------------------------|
+| `baseService` | String  | `org.nanonative.nano.core.model.Service` | `<configuration>` or `-DcodegenSvcList.baseService=...` |
+| `verbose`     | boolean | `false`                                  | `-DcodegenSvcList.verbose=true`                         |
 
 See goal details:
 
@@ -103,15 +106,18 @@ mvn -pl :devconsole -am clean package -DcodegenSvcList.verbose=true
 ## Troubleshooting
 
 **No `services.index` in the JAR**
+
 - The plugin isn’t bound to that module.
 - The module didn’t produce classes (empty sources or skipped compile).
 
 **Empty `services.index`**
+
 - `baseService` Check if baseService location has changed or does the module have any Nano services:
 - Get verbose logging output using -DcodegenSvcList.verbose=true
 
 **Step-through debug**
 Run this in the IDE of your project which includes this plugin:
+
 ```bash
 mvnDebug process-classes -DcodegenSvcList.verbose=true
 # Attach the debugger of the plugin project (this) to localhost:8000
