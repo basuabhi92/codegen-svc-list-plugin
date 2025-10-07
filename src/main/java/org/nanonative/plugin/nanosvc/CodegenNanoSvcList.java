@@ -6,9 +6,11 @@ import org.apache.maven.plugin.MojoExecutionException;
 import org.apache.maven.plugins.annotations.*;
 import org.apache.maven.project.MavenProject;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.InputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Files;
@@ -32,10 +34,10 @@ import java.util.jar.JarFile;
  * Bails early if the base type isn't present on the classpath.
  */
 @Mojo(
-        name = "generate",
-        defaultPhase = LifecyclePhase.PROCESS_CLASSES,
-        threadSafe = true,
-        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
+    name = "generate",
+    defaultPhase = LifecyclePhase.PROCESS_CLASSES,
+    threadSafe = true,
+    requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME
 )
 public final class CodegenNanoSvcList extends AbstractMojo {
 
@@ -72,12 +74,11 @@ public final class CodegenNanoSvcList extends AbstractMojo {
             for (Artifact artifact : project.getArtifacts()) {
                 File jar = artifact.getFile();
                 if (jar != null && jar.isFile() && "jar".equals(artifact.getType())) {
-                    scanJar(jar, headers);
+                    services.addAll(scanJar(jar, headers));
                 }
             }
 
             log("[codegen-svc-list] headers size = " + headers.size(), 'I');
-            log("[codegen-svc-list] headers = " + headers, 'I');
 
             // Early bail if the Nano service is not on the classpath
             if (!headers.containsKey(baseNanoService)) {
@@ -105,11 +106,10 @@ public final class CodegenNanoSvcList extends AbstractMojo {
     }
 
     private void scanDirectory(Path root, Map<String, ClassHeader> out) throws IOException {
-
         try (var stream = Files.walk(root)) {
             var it = stream.filter(Files::isRegularFile)
-                    .filter(p -> p.getFileName().toString().endsWith(".class"))
-                    .iterator();
+                .filter(p -> p.getFileName().toString().endsWith(".class"))
+                .iterator();
             while (it.hasNext()) {
                 Path p = it.next();
                 String internal = root.relativize(p).toString().replace('\\', '/');
@@ -120,8 +120,23 @@ public final class CodegenNanoSvcList extends AbstractMojo {
         }
     }
 
-    private void scanJar(File jar, Map<String, ClassHeader> out) throws IOException {
+    private List<String> scanJar(File jar, Map<String, ClassHeader> out) throws IOException {
+        List<String> lines = new ArrayList<>();
         try (JarFile jf = new JarFile(jar)) {
+            JarEntry indexFileEntry = jf.getJarEntry(OUTPUT_PATH);
+            if (null != indexFileEntry) {
+                try (InputStream in = jf.getInputStream(indexFileEntry);
+                     BufferedReader br = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8))) {
+                    for (String s; (s = br.readLine()) != null; ) {
+                        s = s.trim();
+                        if (!s.isBlank() && !s.startsWith("#"))
+                            lines.add(s);
+                    }
+                    log("[codegen-svc-list] using precomputed index from " + jar.getName() + " (" + lines + ")", 'I');
+                    return lines;
+                }
+            }
+            log("[codegen-svc-list] no precomputed index for " + jar.getName() + ", going to scan...", 'I');
             Enumeration<JarEntry> en = jf.entries();
             while (en.hasMoreElements()) {
                 JarEntry e = en.nextElement();
@@ -132,6 +147,7 @@ public final class CodegenNanoSvcList extends AbstractMojo {
                     out.putIfAbsent(formatKey(name), ClassHeader.read(in));
                 }
             }
+            return List.of();
         }
     }
 
@@ -210,7 +226,7 @@ public final class CodegenNanoSvcList extends AbstractMojo {
 
     private void markVisited(final List<String> visited, final Map<String, Boolean> cache, final boolean isNanoService) {
         for (String v : visited)
-            cache.put(v, isNanoService);
+            cache.putIfAbsent(v, isNanoService);
     }
 
     private void log(String msg, char level) {
