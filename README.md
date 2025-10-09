@@ -1,15 +1,17 @@
-# Maven plugin for generating available Nano services in consumer projects
+# Class Implementation Index Maven Plugin
 
-Generates a compile-time index of all **concrete subclasses** of your Nano `Service` — from **the current module and its
-dependencies** — and package it into your JAR at:
+Generate a **`.properties`** index of all **concrete implementations** of one or more abstract base types (interfaces/abstract classes) found in **your project and its dependencies**.
 
+By default, it writes to:
 ```
-META-INF/plugin/nano/services.index
+META-INF/io/github/absketches/plugin/services.properties
 ```
+Each **key** is a dotted base class; each **value** is a comma‑separated list of dotted implementation classes.
 
-Each line in the file is a fully-qualified class name. No reflection, no runtime scanning — just a fast header scan at
-build time.
-
+Example:
+```properties
+org.nanonative.nano.core.model.Service=org.nanonative.devconsole.service.DevConsoleService,org.nanonative.nano.services.http.HttpServer,org.ab.sentinel.service.PostgreSqlService
+```
 ---
 
 ## Features
@@ -28,98 +30,85 @@ build time.
 
 ---
 
-## Quick start (consumer project)
-
-Add the plugin to any module that produces a JAR:
+## Quickstart
 
 ```xml
-
-<build>
-    <plugins>
-        <plugin>
-            <groupId>org.nanonative</groupId>
-            <artifactId>codegen-svc-list-maven-plugin</artifactId>
-            <version>1.0.0</version>
-            <executions>
-                <execution>
-                    <id>nano-service-index</id>
-                    <phase>process-classes</phase>
-                    <goals>
-                        <goal>generate</goal>
-                    </goals>
-                    <!-- Optional: If Nano's service class moves from the default add the below config to point to the new location -->
-                    <configuration>
-                        <baseService>org/nanonative/nano/core/model/Service</baseService>
-                    </configuration>
-                </execution>
-            </executions>
-        </plugin>
-    </plugins>
-</build>
+<plugin>
+  <groupId>io.github.absketches</groupId>
+  <artifactId>codegen-concrete-classes-maven-plugin</artifactId>
+  <version>1.0.0</version>
+  <executions>
+    <execution>
+      <id>impl-index</id>
+      <goals><goal>generate</goal></goals>
+      <configuration>
+        <baseServices>org.nanonative.nano.core.model.Service,io.github.absketches.sentinel.Notification</baseServices>
+        <outputDir>META-INF/io/github/absketches/plugin/services.properties</outputDir>
+        <usePrecompiled>true</usePrecompiled>
+        <verbose>false</verbose>
+      </configuration>
+    </execution>
+  </executions>
+</plugin>
 ```
 
-Build and verify (for verbose logging set the flag -DcodegenSvcList.verbose=true):
-
-```bash
-mvn clean package -DcodegenSvcList.verbose=true
+Invoke:
+```
+mvn codegen-concrete-classes:generate
 ```
 
 ---
 
-## Configuration
+## Configuration properties (prefix: `codegenConcreteClass.*`)
 
-| Parameter     | Type    | Default                                  | How to set                                              |
-|---------------|---------|------------------------------------------|---------------------------------------------------------|
-| `baseService` | String  | `org.nanonative.nano.core.model.Service` | `<configuration>` or `-DcodegenSvcList.baseService=...` |
-| `verbose`     | boolean | `false`                                  | `-DcodegenSvcList.verbose=true`                         |
+> Use **dot-notation** for class names in the configuration.
 
-See goal details:
+### `codegenConcreteClass.baseServices` (String) — **required**
+Comma‑separated list of abstract base types (interfaces/abstract classes) whose concrete implementations you want to index?
+- **Default:** `org.nanonative.nano.core.model.Service`
+- **Example:** `io.github.absketches.sentinel.Notification`
 
-```bash
-mvn help:describe   -Dplugin=org.nanonative:codegen-svc-list-maven-plugin:1.0.0   -Dgoal=generate -Ddetail
-```
+### `codegenConcreteClass.outputDir` (String)
+Path (relative to `${project.build.outputDirectory}`) of the generated file.
+- **Default:** `META-INF/io/github/absketches/plugin/services.properties`
+
+### `codegenConcreteClass.usePrecompiled` (boolean)
+If `true`, when a dependency JAR already contains a properties file at the same `outputDir`, those entries are **merged** in. If a JAR’s precomputed file is **missing** some configured bases, that JAR is **scanned** to fill gaps.
+- **Default:** `true`
+
+### `codegenConcreteClass.verbose` (boolean)
+Enable extra logging.
+- **Default:** `false`
 
 ---
 
 ## How it works
-
-- Walks `target/classes` and enumerates dependency JARs.
-- Reads only the **classfile header** (`0xCAFEBABE`, version, constant pool, `access_flags`, `super_class`).  
-  Implementation uses `DataInputStream` for reads.
-- Follows superclass chains with memoization.
-- Writes `META-INF/plugin/nano/services.index` **only if content changed**.
-
----
-
-## Multi-module builds
-
-Bind the plugin in **every module that produces a JAR** and needs an index.
-
-Build a specific module (and its dependencies):
-
-```bash
-mvn -pl :devconsole -am clean package -DcodegenSvcList.verbose=true
-```
+1. Parses `baseServices` (dotted) and converts to JVM internal form.
+2. Scans your module’s class files and builds a header map.
+3. For each dependency JAR:
+    - If `usePrecompiled=true` and a properties file exists at `outputDir`, it is read and filtered to your configured base types.
+    - If the file is absent or **incomplete**, the JAR is scanned to populate headers.
+4. For each base type, the plugin unions **precomputed** + **discovered** implementations and writes the final properties file atomically.
 
 ---
 
 ## Troubleshooting
 
-**No `services.index` in the JAR**
+**No `services.properties` in the JAR**
 
 - The plugin isn’t bound to that module.
 - The module didn’t produce classes (empty sources or skipped compile).
 
-**Empty `services.index`**
+**Empty `services.properties`**
 
-- `baseService` Check if baseService location has changed or does the module have any Nano services:
-- Get verbose logging output using -DcodegenSvcList.verbose=true
+- `baseClasses` Check if baseClasses location has changed or does the module have any implementations:
+- Get verbose logging output using -DcodegenConcreteClass.verbose=true
 
 **Step-through debug**
 Run this in the IDE of your project which includes this plugin:
 
 ```bash
-mvnDebug process-classes -DcodegenSvcList.verbose=true
+mvnDebug process-classes -DcodegenConcreteClass.verbose=true
 # Attach the debugger of the plugin project (this) to localhost:8000
 ```
 
@@ -127,7 +116,6 @@ mvnDebug process-classes -DcodegenSvcList.verbose=true
 
 ## Contract
 
-- Output path is **fixed**: `META-INF/plugin/nano/services.index` (consumers rely on this).
 - Only **concrete** subclasses are listed.
 - Scans **compile + runtime** classpath.
 

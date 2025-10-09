@@ -4,19 +4,19 @@
          http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.nanonative</groupId>
-    <artifactId>codegen-svc-list-maven-plugin</artifactId>
-    <version>0.1.4</version>
+    <groupId>io.github.absketches</groupId>
+    <artifactId>codegen-concrete-classes-maven-plugin</artifactId>
+    <version>1.0.0-SNAPSHOT</version>
     <packaging>maven-plugin</packaging>
 
     <name>Codegen Nano Services</name>
-    <description>Maven plugin for generating available Nano services in consumer projects</description>
-    <url>https://github.com/basuabhi92/codegen-svc-list-plugin</url>
+    <description>Plugin for generating concrete class implementations for base classes in project and dependencies</description>
+    <url>https://github.com/absketches/codegen-svc-list-plugin</url>
 
     <scm>
-        <connection>scm:git:ssh://git@github.com/basuabhi92/codegen-svc-list-plugin.git</connection>
-        <developerConnection>scm:git:ssh://git@github.com/basuabhi92/codegen-svc-list-plugin.git</developerConnection>
-        <url>https://github.com/basuabhi92/codegen-svc-list-plugin.git</url>
+        <connection>scm:git:ssh://git@github.com/absketches/codegen-svc-list-plugin.git</connection>
+        <developerConnection>scm:git:ssh://git@github.com/absketches/codegen-svc-list-plugin.git</developerConnection>
+        <url>https://github.com/absketches/codegen-svc-list-plugin.git</url>
     </scm>
 
     <developers>
@@ -99,7 +99,7 @@
                             <goal>descriptor</goal>
                         </goals>
                         <configuration>
-                            <goalPrefix>codegen-svc-list</goalPrefix>
+                            <goalPrefix>codegen-concrete-classes</goalPrefix>
                         </configuration>
                     </execution>
                 </executions>

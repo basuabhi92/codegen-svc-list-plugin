@@ -1,4 +1,4 @@
-package org.nanonative.plugin.nanosvc;
+package io.github.absketches.plugin.concreteclazz;
 
 import java.io.DataInputStream;
 import java.io.IOException;
