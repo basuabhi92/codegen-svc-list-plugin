@@ -124,6 +124,19 @@ final class ClassFileUtils {
         return false;
     }
 
+    static String formatResultMap(final Map<String, Set<String>> resultMap) {
+        StringBuilder sb = new StringBuilder();
+        for (var entry : resultMap.entrySet()) {
+            String key = toDotted(entry.getKey());
+            String value = entry.getValue().stream()
+                .map(ClassFileUtils::toDotted)
+                .reduce((a, b) -> a + "," + b)
+                .orElse("");
+            sb.append(key).append("=").append(value).append("\n");
+        }
+        return String.valueOf(sb);
+    }
+
     private static void markVisited(List<String> visited, Map<String, Boolean> cache, boolean v) {
         for (String s : visited) cache.putIfAbsent(s, v);
     }

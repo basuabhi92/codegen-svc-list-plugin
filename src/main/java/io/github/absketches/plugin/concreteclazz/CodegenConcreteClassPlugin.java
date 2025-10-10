@@ -26,6 +26,7 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 
 import static io.github.absketches.plugin.concreteclazz.ClassFileUtils.formatKey;
+import static io.github.absketches.plugin.concreteclazz.ClassFileUtils.formatResultMap;
 import static io.github.absketches.plugin.concreteclazz.ClassFileUtils.isConcrete;
 import static io.github.absketches.plugin.concreteclazz.ClassFileUtils.isSubclassOfBase;
 import static io.github.absketches.plugin.concreteclazz.ClassFileUtils.parseBaseClasses;
@@ -89,7 +90,6 @@ public final class CodegenConcreteClassPlugin extends AbstractMojo {
             for (Artifact artifact : project.getArtifacts()) {
                 processArtifact(artifact, headers, precompiledMap, requestedClasses);
             }
-
             log("[codegen-svc-list] headers size = " + headers.size(), 'I');
 
             // For each configured base type, collect implementations
@@ -192,18 +192,7 @@ public final class CodegenConcreteClassPlugin extends AbstractMojo {
             return;
 
         Files.createDirectories(parent);
-
-        StringBuilder sb = new StringBuilder();
-        for (var entry : resultMap.entrySet()) {
-            String key = toDotted(entry.getKey());
-            String value = entry.getValue().stream()
-                .map(ClassFileUtils::toDotted)
-                .reduce((a, b) -> a + "," + b)
-                .orElse("");
-            sb.append(key).append("=").append(value).append("\n");
-        }
-        String newContent = String.valueOf(sb);
-
+        String newContent = formatResultMap(resultMap);
         String oldContent = Files.exists(outputPath) ? Files.readString(outputPath, StandardCharsets.UTF_8) : null;
         if (newContent.equals(oldContent)) {
             log("[codegen-svc-list] unchanged - skipping", 'I');
