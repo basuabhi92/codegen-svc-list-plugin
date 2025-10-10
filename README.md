@@ -19,7 +19,7 @@ org.nanonative.nano.core.model.Service=org.nanonative.devconsole.service.DevCons
 - ⚡  **Fast**: parses only .class headers (no ASM, no classloading).
 - 📦 **Works across dependencies**: current module + resolved JARs.
 - 🧹 **Memoization**: stores traversed superclass paths in memory to avoid rework.
-- 🔒 **Zero intrusion**: developers don’t add annotations or code.
+- 🔒 **Zero intrusion**: Developers don’t add code/annotations. Great for finding concrete implementations of specific base types in consumers.
 
 ---
 
@@ -63,7 +63,7 @@ mvn codegen-concrete-classes:generate
 
 > Use **dot-notation** for class names in the configuration.
 
-### `codegenConcreteClass.baseServices` (String) — **required**
+### `codegenConcreteClass.baseClasses` (String) — **required**
 Comma‑separated list of abstract base types (interfaces/abstract classes) whose concrete implementations you want to index?
 - **Default:** `org.nanonative.nano.core.model.Service`
 - **Example:** `io.github.absketches.sentinel.Notification`

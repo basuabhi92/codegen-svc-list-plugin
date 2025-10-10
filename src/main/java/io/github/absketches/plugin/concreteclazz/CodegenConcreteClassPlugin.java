@@ -55,7 +55,7 @@ public final class CodegenConcreteClassPlugin extends AbstractMojo {
     private boolean verbose;
 
     /**
-     * The base Classes can be set via -DcodegenConcreteClass.baseClasses=org/nanonative/nano/newPackage/Service,...
+     * The base Classes can be set via -DcodegenConcreteClass.baseClasses=org.nanonative.nano.core.model.Service,...
      */
     @Parameter(property = "codegenConcreteClass.baseClasses", defaultValue = "org.nanonative.nano.core.model.Service")
     private String baseClasses;
@@ -166,15 +166,8 @@ public final class CodegenConcreteClassPlugin extends AbstractMojo {
     }
 
     private void gatherConcreteClasses(final String base, final Map<String, ClassHeader> headers, final Map<String, Set<String>> result, final Map<String, Boolean> cache, final Map<String, Set<String>> precompiledMap) {
-        Set<String> services = new TreeSet<>();
 
-        if (!headers.containsKey(base)) {
-            log("[codegen-svc-list] Base type not found on classpath: " + toDotted(base), 'I');
-            result.put(base, services);
-            return;
-        }
-
-        services.addAll(precompiledMap.getOrDefault(base, Set.of()));
+        Set<String> services = new TreeSet<>(precompiledMap.getOrDefault(base, Set.of()));
 
         for (var e : headers.entrySet()) {
             String className = e.getKey();
