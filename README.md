@@ -4,11 +4,11 @@ Generate a **`.properties`** index of all **concrete implementations** of one or
 
 By default, it writes to:
 ```
-META-INF/io/github/absketches/plugin/services.properties
+classes/META-INF/io/github/absketches/plugin/services.properties
 ```
 Each **key** is a dotted base class; each **value** is a comma‑separated list of dotted implementation classes.
 
-Example:
+Example output:
 ```properties
 org.nanonative.nano.core.model.Service=org.nanonative.devconsole.service.DevConsoleService,org.nanonative.nano.services.http.HttpServer,org.ab.sentinel.service.PostgreSqlService
 ```
@@ -83,7 +83,7 @@ Enable extra logging.
 ---
 
 ## How it works
-1. Parses `baseServices` (dotted) and converts to JVM internal form.
+1. Parses `baseClasses` (dotted) and converts to JVM internal form.
 2. Scans your module’s class files and builds a header map.
 3. For each dependency JAR:
     - If `usePrecompiled=true` and a properties file exists at `outputDir`, it is read and filtered to your configured base types.

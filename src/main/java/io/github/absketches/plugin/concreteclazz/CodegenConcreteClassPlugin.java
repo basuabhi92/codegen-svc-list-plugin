@@ -55,8 +55,7 @@ public final class CodegenConcreteClassPlugin extends AbstractMojo {
     private boolean verbose;
 
     /**
-     * The base Classes can be set via -DcodegenConcreteClass.baseClasses=org/nanonative/nano/newPackage/Service
-     * ,org/nanonative/nano/newPackage/NewService,...
+     * The base Classes can be set via -DcodegenConcreteClass.baseClasses=org/nanonative/nano/newPackage/Service,...
      */
     @Parameter(property = "codegenConcreteClass.baseClasses", defaultValue = "org.nanonative.nano.core.model.Service")
     private String baseClasses;
